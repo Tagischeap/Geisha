@@ -20,7 +20,7 @@ this.messaged = async function(message)
 
 this.deleted = async function(client, message)
 {
-  //console.log(message);
+  console.log(message);
   	// ignore direct messages
   	if (!message.guild) return;
     //If message is bot message message starts with prefix
