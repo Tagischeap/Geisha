@@ -1,6 +1,7 @@
 const {
   prefix
 } = require('../config.json');
+const client = require('../Services/DiscordBot.js');
 module.exports = {
   name: 'help',
   description: 'List all of my commands or info about a specific command.',
@@ -9,10 +10,9 @@ module.exports = {
   cooldown: 5,
   execute(message, args) {
     const data = [];
-    const {
-      commands
-    } = message.client;
+    const { commands } = client;
 
+    //console.log(commands);
     if (!args.length) {
       data.push('Here\'s a list of all my commands:');
       data.push(commands.map(command => '`' + command.name + '`').join(', '));

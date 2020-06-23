@@ -9,8 +9,8 @@ module.exports = {
 
     var input = fArg.split(',');
     var pollText = input[0] + "";
-    if (input.length > 1){
-      for(var i = 1; i < input.length; i++ ){
+    if (input.length > 1) {
+      for (var i = 1; i < input.length; i++) {
         if (i > 10)
           return;
         if (i === 1)
@@ -38,33 +38,34 @@ module.exports = {
       }
     }
     try {
-      message.channel.send(pollText).then((pollMessage)=>{
-        if (args.length > 1){
-          for (var i = 1; i < input.length; i++){
-              if (i > 10)
-                return;
-              if (i === 1)
-                pollMessage.react('1️⃣');
-              if (i === 2)
-                pollMessage.react('2️⃣');
-              if (i === 3)
-                pollMessage.react('3️⃣');
-              if (i === 4)
-                pollMessage.react('4️⃣');
-              if (i === 5)
-                pollMessage.react('5️⃣');
-              if (i === 6)
-                pollMessage.react('6️⃣');
-              if (i === 7)
-                pollMessage.react('7️⃣');
-              if (i === 8)
-                pollMessage.react('8️⃣');
-              if (i === 9)
-                pollMessage.react('9️⃣');
-              if (i === 10)
-                pollMessage.react('🔟');
+      message.channel.send(pollText).then((pollMessage) => {
+        if (args.length > 1) {
+          for (var i = 1; i < input.length; i++) {
+            if (i > 10)
+              return;
+            if (i === 1)
+              pollMessage.react('1️⃣');
+            if (i === 2)
+              pollMessage.react('2️⃣');
+            if (i === 3)
+              pollMessage.react('3️⃣');
+            if (i === 4)
+              pollMessage.react('4️⃣');
+            if (i === 5)
+              pollMessage.react('5️⃣');
+            if (i === 6)
+              pollMessage.react('6️⃣');
+            if (i === 7)
+              pollMessage.react('7️⃣');
+            if (i === 8)
+              pollMessage.react('8️⃣');
+            if (i === 9)
+              pollMessage.react('9️⃣');
+            if (i === 10)
+              pollMessage.react('🔟');
           }
-        } else {
+        }
+        else {
           pollMessage.react('🇴');
           pollMessage.react('🇽');
         }
@@ -73,7 +74,8 @@ module.exports = {
       if (message.member.permissions.has('MANAGE_MESSAGES')) {
         //message.delete({ timeout: 5000, reason: 'For poll' });
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(error);
     }
   },
