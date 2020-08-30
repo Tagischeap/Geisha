@@ -7,10 +7,10 @@ const {
 } = require('../config.json');
 const Discord = require('discord.js');
 const client = new Discord.Client();
-
-const command = require('./CommandHandler.js');
 const auddit = require('./Auddit.js');
-const currency = require('./CurrencyHandler.js');
+
+//const command = require('./CommandHandler.js');
+//const currency = require('./CurrencyHandler.js');
 
 client.login(token);
 
