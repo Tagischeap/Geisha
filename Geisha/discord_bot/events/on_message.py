@@ -1,34 +1,34 @@
 import logging
-import discord  # Add this line
-from utils.openai_client import get_openai_response
-from utils.error_utils import send_discord_error
+from commands import commands  # Import the commands dictionary
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-async def handler(client, message):
-    logger.info(f"Message received: {message.content}")
+async def handle_command(client, message):
+    """Handles commands and checks for the 'ask' command."""
+    prefix = '!'  # Define your command prefix here
 
-    if message.author == client.user:
-        return
-
-    # Check if the message mentions the bot or is a reply
-    if client.user in message.mentions or message.type == discord.MessageType.reply:
-        user_query = message.content
-
-        # If it's a reply, get the content of the replied message
-        if message.type == discord.MessageType.reply:
-            user_query = message.reference.resolved.content  # Get content of the message being replied to
-
-        logger.info(f"Extracted user query: '{user_query}'")
+    # Check if the message mentions her
+    if client.user.mentioned_in(message):
+        content_after_mention = message.content[len(message.mentions[0].mention):].strip()
         
-        # Process the user's query using the OpenAI API
-        try:
-            response_text = await get_openai_response(user_query)
-            try:
-                await message.channel.send(response_text)
-                logger.info("Response sent successfully.")
-            except Exception as e:
-                await send_discord_error(message, f"Error sending response message: {str(e)}")
-            await message.add_reaction('👍')
-        except Exception as e:
-            await send_discord_error(message, f"Error with OpenAI request: {str(e)}")
+        if content_after_mention:
+            args = content_after_mention.split()
+            command_name = 'ask'  # Default command or customize as needed
+            if command_name in commands:
+                await commands[command_name]['execute'](client, message, args)
+        else:
+            await message.channel.send("How can I assist you? Please ask your question or use the '!ask' command.")
+        return  # Exit after processing the mention
+
+    # Check if the message starts with the command prefix
+    if message.content.startswith(prefix):
+        command_name = message.content[len(prefix):].split()[0]  # Extract the command name
+        args = message.content[len(prefix) + len(command_name):].strip().split()  # Extract the arguments
+
+        # Check if the command is recognized
+        if command_name in commands:
+            await commands[command_name]['execute'](client, message, args)  # Call the command's execute function
+        else:
+            await message.channel.send("I didn't understand that command. Please try '!ask <your question>'.")
