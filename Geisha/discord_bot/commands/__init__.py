@@ -6,7 +6,7 @@ commands = {}
 def load_commands():
     """Dynamically loads all command modules."""
     for filename in os.listdir(os.path.dirname(__file__)):
-        if filename.endswith('.py') and filename != '__init__.py':
+        if filename.endswith('.py') and filename != '__init__.py' and filename != 'handle_command.py':  # Exclude handle_command
             command_name = filename[:-3]  # Strip the '.py' extension
             module = importlib.import_module(f'commands.{command_name}')
             commands[command_name] = {

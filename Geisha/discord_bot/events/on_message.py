@@ -1,12 +1,13 @@
 import logging
-from commands import commands  # Import the commands dictionary
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
 async def handle_command(client, message):
-    """Handles commands and checks for the 'ask' command."""
+    """Handles commands based on user input."""
+    from commands import commands  # Import commands locally to avoid circular imports
+
     prefix = '!'  # Define your command prefix here
 
     # Check if the message mentions her
@@ -15,7 +16,7 @@ async def handle_command(client, message):
         
         if content_after_mention:
             args = content_after_mention.split()
-            command_name = 'ask'  # Default command or customize as needed
+            command_name = 'ask'  # Default command, can be adjusted
             if command_name in commands:
                 await commands[command_name]['execute'](client, message, args)
         else:

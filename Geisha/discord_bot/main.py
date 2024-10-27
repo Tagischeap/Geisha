@@ -35,7 +35,7 @@ async def on_message(message):
         logger.info("Message is from the bot itself; ignoring.")
         return  # Exit the function if the message is from her
 
-    await handle_command(client, message)  # Call the command handler
+    await handle_command(client, message)  # Call the command handler function
 
 # Run the bot
 if DISCORD_TOKEN:
