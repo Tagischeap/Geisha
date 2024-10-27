@@ -1,1 +1,6 @@
 keys.env
+discord_bot.zip
+**/__pycache__/
+GeishaAWSkey.pem
+awsREADME.txt
+TODO.txt
