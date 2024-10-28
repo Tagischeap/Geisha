@@ -2,6 +2,7 @@
 
 import discord
 import random
+import asyncio
 
 # Define your bank of words and the emoji to react with
 BANK_OF_WORDS = {
@@ -28,18 +29,21 @@ BANK_OF_WORDS = {
     "familiar", "harbinger", "hemlock", "incubus", "mephitic", "miasma", "nefarious", "necropolis", "nighttide", "portent", "sepulcher", "sorcerer", "tenebrous", "threnody", "wyrm", 
     "alchemist", "amalgam", "arcana", "astral", "baneful", "besmirched", "bogeyman", "carnivorous", "conjurer", "crepuscule", "darkling", "doppelgänger", "drear", "ephemeral", 
     "exhumed", "grimoire", "harrow", "hoodoo", "lamentation", "lycan", "maelstrom", "malediction", "memento", "menace", "morass", "nocturne", "plague-ridden", "quagmire", 
-    "shadowed", "spellcaster", "succubus", "tormented", "transmutation", "umbrous", "vengeful", "voidwalker", "whisperer", "wraithling", "yokai", "zephyr" 
-
+    "shadowed", "spellcaster", "succubus", "tormented", "transmutation", "umbrous", "vengeful", "voidwalker", "whisperer", "wraithling", "yokai", "zephyr"
 }  # Add words here
-EMOJI_LIST = ["🎃", "👻", "🕸️", "🕷️", "💀", "☠️", "👽", "🧛", "🧙", "🧟", "🌕", "🔮", "🎭", "🕯️", "⚰️", "🪦", "⚱️", "🍬", "🍭", "🧹", "🩸", "😱", "😵", "🧛‍♂️", "🧛‍♀️", "🧙‍♂️", "🧙‍♀️", "🧟‍♂️", "🧟‍♀️"]  # List of emojis to choose from
+EMOJI_LIST = ["🎃", "👻", "🕸️", "🕷️", "💀", "☠️", "👽", "🧛", "🧙", "🧟", "🌕", "🔮", "🎭", "🕯️", "⚰️", "🪦", "⚱️", "🍬", "🍭", "🧹", "🩸", "😱", "🧛‍♂️", "🧛‍♀️", "🧙‍♂️", "🧙‍♀️", "🧟‍♂️", "🧟‍♀️"]  # List of emojis to choose from
 
 async def react_to_message(client, message):
-    """Handles reactions based on words in the BANK_OF_WORDS."""
-    if message.author == client.user:
-        return  # Ignore messages from the bot itself
+    try:
+        """Handles reactions based on words in the BANK_OF_WORDS."""
+        if message.author == client.user:
+            return  # Ignore messages from the bot itself
 
-    # Check if any word in the message matches a word in the bank
-    message_words = set(message.content.lower().split())
-    if message_words & BANK_OF_WORDS:  # If there's an intersection, react
-        random_emoji = random.choice(EMOJI_LIST)  # Pick a random emoji
-        await message.add_reaction(random_emoji)  # React with the chosen emoji
+        # Check if any word in the message matches a word in the bank
+        message_words = set(message.content.lower().split())
+        if message_words & BANK_OF_WORDS:  # If there's an intersection, react
+            random_emoji = random.choice(EMOJI_LIST)  # Pick a random emoji
+            await message.add_reaction(random_emoji)  # React with the chosen emoji
+            await asyncio.sleep(1)  # 1-second delay between reactions to prevent rate limiting
+    except discord.HTTPException as e:
+        print(f"Failed to add reaction: {e}")
