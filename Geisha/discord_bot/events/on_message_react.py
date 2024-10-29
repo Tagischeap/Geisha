@@ -3,47 +3,72 @@
 import discord
 import random
 import asyncio
+import logging
+# Set up logging for debugging
+logger = logging.getLogger(__name__)
 
 # Define your bank of words and the emoji to react with
 BANK_OF_WORDS = {
-    "spooky", "witch", "ghost", "haunted", "pumpkin", "monster", "vampire", "zombie", "candy", "cauldron", "skeleton", "ghoul", "cobweb", "mummy", "grim", "reaper", "moonlit", "eerie", "fright", 
-    "curse", "phantom", "cackle", "creepy", "bat", "boo", "lantern", "goblin", "bewitched", "scream", "midnight", "Halloween", "werewolf", "tombstone", "spirit", "shadow", "potion", "broomstick", 
-    "jack-o-lantern", "darkness", "fang", "spell", "scarecrow", "casket", "crypt", "skull", "fog", "howl", "clown", "mask", "apparition", "horror", "macabre", "nightmare", "voodoo", "spider", 
-    "chilling", "moonlight", "sinister", "trick", "treat", "eclipse", "terror", "omen", "gory", "fangs", "dread", "incantation", "undead", "phantasm", "possession", "fear", "hex", "ritual", 
-    "specter", "grisly", "wicked", "fearsome", "grave", "creep", "mystery", "fable", "myth", "fairy", "gloom", "witchcraft", "spellbound", "demon", "ghastly", "occult", "evil", 
-    "spectral", "shadowy", "mystic", "unholy", "shiver", "unseen", "lurking", "cursed", "blight", "dusk", "dawn", "nocturnal", "shadows", "netherworld", "wraith", "phantasmal", "morbid", 
-    "pallor", "necromancer", "bewitch", "pale", "tremor", "wail", "flesh", "soul", "afterlife", "frighten", "twilight", "dark", "ominous", "shade", "unrest", "peril", "fearful", "shudder", 
-    "frightful", "cremation", "poltergeist", "creature", "nightfall", "scary", "bizarre", "black", "freaky", "blood", "scare", "moon", "nightshade", "ghoulish", "devilish", "hellish", 
-    "crematory", "beast", "nightmarish", "graveyard", "screech", "bloodshot", "paranormal", "murky", "banshee", "cold", "brooding", "witchery", "haunt", 
-    "stalk", "shroud", "shriek", "devil", "sinful", "plague", "supernatural", "forsaken", "gallows", "phantomlike", "necrotic", "vile", "hollow", "mournful", "sepulchral", 
-    "grimy", "crone", "hexed", "phantasmagoric", "cryptic", "bewitching", "noir", "freak", "mystify", "bone", "tremble", "moonbeam", "hallowed", "scythe", "blasphemy", "lament", 
-    "blackcat", "brimstone", "hood", "stalker", "silhouette", "phantasmic", "gloomy", "spectre", "wraithlike", "relic", "umbra", "nightly", "lunar", "underworld", "witchy", 
-    "hooded", "gore", "foul", "leech", "creeping", "arcane", "lair", "bloodcurdling", "seance", "darkened", "ritualistic", "foreboding", "mystical", "underground", "cobwebby", 
-    "bleak", "eclipsed", "mortal", "fabled", "ethereal", "damned", "hauntings", "spook", "nether", "crepuscular", "forebode", "loom", "dreadful", "faint", "scepter", "sorcery", "beware", 
-    "scorn", "scared", "sorceress", "veiled", "phantasmagoria", "deathly", "graven", "asylum", "batty", "cadaver", "catacomb", "chimera", "conjure", "doom", "exorcism", 
-    "fiend", "hysteria", "labyrinth", "madness", "psycho", "revenant", "thicket", "void", "bewitchment", "bloodlust", "bone-chilling", "carnage", "coffin", 
-    "conjuring", "curse-bound", "deadly", "decay", "desecrate", "disembodied", "eldritch", "ensnare", "entrails", "eternal", "eyeless", "fiendish", "frightening", 
-    "ghast", "gore-soaked", "grimace", "haunting", "hollow-eyed", "horrifying", "husk", "infernal", "inferno", "infestation", "jittery", "keening", "lamenting", "lich", "lurker", 
-    "lycanthrope", "madman", "marionette", "menacing", "noxious", "petrifying", "putrid", "rotting", "sacrilege", "scourge", "slayer", "stygian", "tainted", 
-    "talisman", "torture", "torment", "unearthly", "vexed", "wretched", "writhing", "yowl", "zealot", "beldam", "bloodletting", "brujeria", "changeling", "daemon", "diabolical", "fae", 
-    "familiar", "harbinger", "hemlock", "incubus", "mephitic", "miasma", "nefarious", "necropolis", "nighttide", "portent", "sepulcher", "sorcerer", "tenebrous", "threnody", "wyrm", 
-    "alchemist", "amalgam", "arcana", "astral", "baneful", "besmirched", "bogeyman", "carnivorous", "conjurer", "crepuscule", "darkling", "doppelgänger", "drear", "ephemeral", 
-    "exhumed", "grimoire", "harrow", "hoodoo", "lamentation", "lycan", "maelstrom", "malediction", "memento", "menace", "morass", "nocturne", "plague-ridden", "quagmire", 
-    "shadowed", "spellcaster", "succubus", "tormented", "transmutation", "umbrous", "vengeful", "voidwalker", "whisperer", "wraithling", "yokai", "zephyr"
+   "halloween", "afterlife", "alchemist", "amalgam", "apparition", "arcana", "arcane", "astral", 
+   "asylum", "baneful", "banshee", "bat", "batty", "beast", "beldam", "besmirched", "beware", "bewitch", 
+   "bewitched", "bewitching", "bewitchment", "bizarre", "black", "blackcat", "blasphemy", "bleak", "blight", 
+   "blood", "bloodcurdling", "bloodletting", "bloodlust", "bloodshot", "bogeyman", "bone", "bone-chilling", 
+   "boo", "brimstone", "brooding", "broomstick", "brujeria", "cackle", "cadaver", "candy", "carnage", 
+   "carnivorous", "casket", "catacomb", "cauldron", "changeling", "chilling", "chimera", "clown", "cobweb", 
+   "cobwebby", "coffin", "cold", "conjure", "conjurer", "conjuring", "creature", "creep", "creeping", "creepy", 
+   "cremation", "crematory", "crepuscular", "crepuscule", "crone", "crypt", "cryptic", "curse", "curse-bound", 
+   "cursed", "daemon", "damned", "dark", "darkened", "darkling", "darkness", "dawn", "deadly", "deathly", 
+   "decay", "demon", "desecrate", "devil", "devilish", "diabolical", "disembodied", "doom", "doppelgänger", 
+   "dread", "dreadful", "drear", "dusk", "eclipse", "eclipsed", "eerie", "eldritch", "ensnare", "entrails", 
+   "ephemeral", "eternal", "ethereal", "evil", "exhumed", "exorcism", "eyeless", "fable", "fabled", "fae", 
+   "faint", "fairy", "familiar", "fang", "fangs", "fear", "fearful", "fearsome", "fiend", "fiendish", 
+   "flesh", "fog", "forebode", "foreboding", "forsaken", "foul", "freak", "freaky", "fright", "frighten", 
+   "frightening", "frightful", "gallows", "ghast", "ghastly", "ghost", "ghoul", "ghoulish", "gloom", "gloomy", 
+   "goblin", "gore", "gore-soaked", "gory", "grave", "graven", "graveyard", "grim", "grimace", "grimoire", 
+   "grimy", "grisly", "hallowed", "harbinger", "harrow", "haunt", "haunted", "haunting", "hauntings", "hellish", 
+   "hemlock", "hex", "hexed", "hollow", "hollow-eyed", "hood", "hooded", "hoodoo", "horrifying", "horror", 
+   "howl", "husk", "hysteria", "incantation", "incubus", "infernal", "inferno", "infestation", "jack-o-lantern", 
+   "jittery", "keening", "labyrinth", "lair", "lament", "lamentation", "lamenting", "lantern", "leech", "lich", 
+   "loom", "lunar", "lurker", "lurking", "lycan", "lycanthrope", "macabre", "madman", "madness", "maelstrom", 
+   "malediction", "marionette", "mask", "memento", "menace", "menacing", "mephitic", "miasma", "midnight", 
+   "monster", "moon", "moonbeam", "moonlight", "moonlit", "morass", "morbid", "mortal", "mournful", "mummy", 
+   "murky", "mystery", "mystic", "mystical", "mystify", "myth", "necromancer", "necropolis", "necrotic", 
+   "nefarious", "nether", "netherworld", "nightfall", "nightly", "nightmare", "nightmarish", "nightshade", 
+   "nighttide", "nocturnal", "nocturne", "noir", "noxious", "occult", "omen", "ominous", "pale", "pallor", 
+   "paranormal", "peril", "petrifying", "phantasm", "phantasmagoria", "phantasmagoric", "phantasmal", 
+   "phantasmic", "phantom", "phantomlike", "plague", "plague-ridden", "poltergeist", "portent", "possession", 
+   "potion", "psycho", "pumpkin", "putrid", "quagmire", "reaper", "relic", "revenant", "ritual", "ritualistic", 
+   "rotting", "sacrilege", "scare", "scarecrow", "scared", "scary", "scepter", "scorn", "scourge", "scream", 
+   "screech", "scythe", "seance", "sepulcher", "sepulchral", "shade", "shadow", "shadowed", "shadows", "shadowy", 
+   "shiver", "shriek", "shroud", "shudder", "silhouette", "sinful", "sinister", "skeleton", "skull", "slayer", 
+   "sorcerer", "sorceress", "sorcery", "soul", "specter", "spectral", "spectre", "spell", "spellbound", 
+   "spellcaster", "spider", "spirit", "spook", "spooky", "stalk", "stalker", "stygian", "succubus", "supernatural", 
+   "tainted", "talisman", "tenebrous", "terror", "thicket", "threnody", "tombstone", "torment", "tormented", 
+   "torture", "transmutation", "treat", "tremble", "tremor", "trick", "twilight", "umbra", "umbrous", "undead", 
+   "underground", "underworld", "unearthly", "unholy", "unrest", "unseen", "vampire", "veiled", "vengeful", "vexed", 
+   "vile", "void", "voidwalker", "voodoo", "wail", "werewolf", "whisperer", "wicked", "witch", "witchcraft", 
+   "witchery", "witchy", "wraith", "wraithlike", "wraithling", "wretched", "writhing", "wyrm", "yokai", "yowl", 
+   "zealot", "zephyr", "zombie" 
 }  # Add words here
-EMOJI_LIST = ["🎃", "👻", "🕸️", "🕷️", "💀", "☠️", "👽", "🧛", "🧙", "🧟", "🌕", "🔮", "🎭", "🕯️", "⚰️", "🪦", "⚱️", "🍬", "🍭", "🧹", "🩸", "😱", "🧛‍♂️", "🧛‍♀️", "🧙‍♂️", "🧙‍♀️", "🧟‍♂️", "🧟‍♀️"]  # List of emojis to choose from
+EMOJI_LIST = ["🎃", "👻", "🕸️", "🕷️", "💀", "⚰️", "🪦", "🍬"]  # List of emojis to choose from
 
 async def react_to_message(client, message):
     try:
-        """Handles reactions based on words in the BANK_OF_WORDS."""
+        # Ignore messages from the bot itself
         if message.author == client.user:
-            return  # Ignore messages from the bot itself
+            return
 
-        # Check if any word in the message matches a word in the bank
-        message_words = set(message.content.lower().split())
-        if message_words & BANK_OF_WORDS:  # If there's an intersection, react
-            random_emoji = random.choice(EMOJI_LIST)  # Pick a random emoji
-            await message.add_reaction(random_emoji)  # React with the chosen emoji
-            await asyncio.sleep(1)  # 1-second delay between reactions to prevent rate limiting
+        # Lowercase and split the message content into words
+        message_words = set(word.lower() for word in message.content.split())
+
+        # Check if there's an intersection between message_words and BANK_OF_WORDS
+        common_words = message_words.intersection(BANK_OF_WORDS)
+
+        # React with a random emoji if there’s a match, log only matches
+        if common_words:
+            # logger.info(f"Found matching words: {common_words}")
+            random_emoji = random.choice(EMOJI_LIST)
+            await message.add_reaction(random_emoji)
+            await asyncio.sleep(1)  # Prevent rate-limiting
     except discord.HTTPException as e:
-        print(f"Failed to add reaction: {e}")
+        logger.error(f"Failed to add reaction: {e}")

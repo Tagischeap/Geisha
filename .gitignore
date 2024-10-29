@@ -1,5 +1,6 @@
 keys.env
 discord_bot.zip
+discord_bot_refactor.zip
 *.pyc
 *.pyo
 GeishaAWSkey.pem

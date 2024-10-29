@@ -1,35 +1,16 @@
-import logging
+# events/on_message.py
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
-logger = logging.getLogger(__name__)
+import discord
+from core.message_handler import process_message
+from events.on_message_react import react_to_message
 
-async def handle_command(client, message):
-    """Handles commands based on user input."""
-    from commands import commands  # Import commands locally to avoid circular imports
+async def on_message(client, message: discord.Message):
+    """Listener for on_message events."""
+    if message.author.bot:
+        return  # Ignore messages from the bot itself
 
-    prefix = '!'  # Define your command prefix here
+    # Delegate message processing to the core handler
+    await process_message(client, message)  # Pass both client and message
 
-    # Check if the message mentions her
-    if client.user.mentioned_in(message):
-        content_after_mention = message.content[len(message.mentions[0].mention):].strip()
-        
-        if content_after_mention:
-            args = content_after_mention.split()
-            command_name = 'ask'  # Default command, can be adjusted
-            if command_name in commands:
-                await commands[command_name]['execute'](client, message, args)
-        else:
-            await message.channel.send("How can I assist you? Please ask your question or use the '!ask' command.")
-        return  # Exit after processing the mention
-
-    # Check if the message starts with the command prefix
-    if message.content.startswith(prefix):
-        command_name = message.content[len(prefix):].split()[0]  # Extract the command name
-        args = message.content[len(prefix) + len(command_name):].strip().split()  # Extract the arguments
-
-        # Check if the command is recognized
-        if command_name in commands:
-            await commands[command_name]['execute'](client, message, args)  # Call the command's execute function
-        else:
-            await message.channel.send("I didn't understand that command. Please try '!ask <your question>'.")
+    # Add reactions based on specific words in the message
+    await react_to_message(client, message)

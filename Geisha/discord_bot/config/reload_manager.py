@@ -1,5 +1,7 @@
+# config/reload_manager.py
 import importlib
 import os
+import sys
 import time
 import logging
 from watchdog.observers import Observer
@@ -9,9 +11,9 @@ from watchdog.events import FileSystemEventHandler
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
-# Track last modified times for debounce
+# Track last modified times and paths for more effective debounce
 last_reload_times = {}
-DEBOUNCE_TIME = 0.5  # seconds, short delay to avoid duplicates but allow quick reloads
+DEBOUNCE_TIME = 1.0  # Increase debounce time to 1 second for more reliable filtering
 
 class ReloadHandler(FileSystemEventHandler):
     def __init__(self, client):
@@ -19,16 +21,22 @@ class ReloadHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         if event.event_type == 'modified' and event.src_path.endswith(".py"):
-            # Convert file path to module name
+            # Handle main.py separately to restart the entire bot
+            if event.src_path.endswith("main.py"):
+                logger.info("Detected change in main.py, restarting bot...")
+                python = sys.executable
+                os.execv(python, [python] + sys.argv)  # Restart the process with the same arguments
+
+            # Reload other modules dynamically
             module_path = os.path.relpath(event.src_path, start=os.getcwd())
             module_name = module_path.replace(os.sep, ".")[:-3]  # Convert path to module name
 
-            # Get the current time and check last reload time for debounce
+            # Get current time for debounce check
             current_time = time.time()
-            last_reload_time = last_reload_times.get(module_name, 0)
+            last_reload_data = last_reload_times.get(module_name, (0, ""))
 
-            # Reload only if enough time has passed since the last reload
-            if current_time - last_reload_time > DEBOUNCE_TIME:
+            # Only reload if enough time has passed and it's the same file path
+            if (current_time - last_reload_data[0] > DEBOUNCE_TIME) or (last_reload_data[1] != event.src_path):
                 try:
                     # Reload the module dynamically
                     module = importlib.import_module(module_name)
@@ -36,8 +44,8 @@ class ReloadHandler(FileSystemEventHandler):
                     globals()[module_name] = module  # Update reference in globals
                     logger.info(f"Reloaded module: {module_name}")
 
-                    # Update last reload time
-                    last_reload_times[module_name] = current_time
+                    # Update last reload time and path
+                    last_reload_times[module_name] = (current_time, event.src_path)
                 except Exception as e:
                     logger.error(f"Error reloading module {module_name}: {e}")
 
