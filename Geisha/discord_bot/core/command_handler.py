@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 COMMANDS = {}
 
 def load_commands():
-    """Loads command modules only if COMMANDS is empty to avoid duplicate loading."""
-    if COMMANDS:  # Check if commands are already loaded
+    """Loads command modules if COMMANDS is empty to avoid duplicate loading."""
+    if COMMANDS:
         logger.info("Commands already loaded; skipping duplicate load.")
         return
 
@@ -24,9 +24,10 @@ def load_commands():
             aliases = getattr(module, 'aliases', [])
             description = getattr(module, 'description', 'No description provided.')
             usage = getattr(module, 'usage', '')
-            cooldown = getattr(module, 'cooldown', 3)  # Default cooldown
+            cooldown = getattr(module, 'cooldown', 3)  # Default cooldown if not specified
 
             if execute_func:
+                # Register the command under both its name and aliases
                 COMMANDS[name] = {
                     'execute': execute_func,
                     'name': name,
@@ -35,7 +36,11 @@ def load_commands():
                     'usage': usage,
                     'cooldown': cooldown
                 }
-                logger.info(f"Loaded command: {name}")
+                # Add aliases to the COMMANDS dictionary for quick lookup
+                for alias in aliases:
+                    COMMANDS[alias] = COMMANDS[name]
+                
+                logger.info(f"Loaded command: {name} with aliases {aliases}")
             else:
                 logger.warning(f"No execute function found in {command_name}")
         
@@ -56,5 +61,8 @@ async def handle_command(client, message: discord.Message, command_name: str, ar
             logger.error(f"Error executing command '{command_name}': {e}")
             await message.channel.send(f"An error occurred while executing `{command_name}`.")
     else:
+        # Provide a friendly error message if command or alias is unknown
         logger.warning(f"Unknown command: '{command_name}' from {message.author}")
-        await message.channel.send(f"Unknown command: `{command_name}`.")
+        await message.channel.send(
+            f"Unknown command: `{command_name}`. Type `!help` to see available commands."
+        )
