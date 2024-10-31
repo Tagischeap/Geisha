@@ -1,7 +1,15 @@
 # core/message_handler.py
 import discord
 import logging
+import os
+from dotenv import load_dotenv
 from core.command_handler import handle_command, COMMANDS
+
+# Load environment variables from keys.env
+load_dotenv()
+
+# Retrieve the command prefix from environment variables, default to "!" if not specified
+PREFIX = os.getenv('PREFIX', '!')
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +40,9 @@ async def process_message(client, message: discord.Message):
         await handle_command(client, message, command_name, args)
         return
 
-    # Handle prefixed commands (e.g., !command)
-    if message.content.startswith("!"):
-        command_name, *args = message.content[1:].split()
+    # Handle prefixed commands using the configured PREFIX
+    if message.content.startswith(PREFIX):
+        command_name, *args = message.content[len(PREFIX):].strip().split()
         await handle_command(client, message, command_name, args)
     else:
         # Log non-command messages

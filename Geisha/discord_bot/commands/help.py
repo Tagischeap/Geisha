@@ -1,6 +1,12 @@
 # commands/help.py
 import discord
+import os
+from dotenv import load_dotenv
 from commands import commands  # Import commands dictionary directly
+
+# Load environment variables
+load_dotenv()
+prefix = os.getenv('PREFIX', '!')  # Retrieve prefix from environment or default to "!"
 
 name = 'help'
 aliases = ['commands']
@@ -9,7 +15,6 @@ usage = 'help <command>'
 cooldown = 5  # Cooldown of 5 seconds
 
 async def execute(client, message, args):
-    prefix = '!'  # Set your command prefix here
     data = []
 
     # List all commands if no specific command is requested

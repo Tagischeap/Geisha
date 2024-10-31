@@ -23,7 +23,7 @@ async def get_openai_response(user_query):
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": user_query}
             ],
-            model="gpt-3.5-turbo",
+            model="gpt-4",
         )
         # Correctly access the response content
         return response.choices[0].message.content  # Use dot notation instead of subscript

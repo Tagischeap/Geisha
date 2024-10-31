@@ -2,7 +2,7 @@
 import discord
 from colorama import Fore, Style
 
-version = "29.10.25"
+version = "31.10.25"
 
 async def on_ready(client):
     print("Executing on_ready from events/on_ready.py")
