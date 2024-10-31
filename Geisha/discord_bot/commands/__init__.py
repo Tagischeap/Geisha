@@ -1,3 +1,4 @@
+# commands/__init__.py
 import os
 import importlib
 
