@@ -17,7 +17,7 @@ BANK_OF_WORDS = {
    "carnivorous", "casket", "catacomb", "cauldron", "changeling", "chilling", "chimera", "clown", "cobweb", 
    "cobwebby", "coffin", "cold", "conjure", "conjurer", "conjuring", "creature", "creep", "creeping", "creepy", 
    "cremation", "crematory", "crepuscular", "crepuscule", "crone", "crypt", "cryptic", "curse", "curse-bound", 
-   "cursed", "daemon", "damned", "dark", "darkened", "darkling", "darkness", "dawn", "deadly", "deathly", 
+   "cursed", "daemon", "damned", "dark", "darkened", "darkling", "darkness", "dawn", "dead", "deadly", "deathly", 
    "decay", "demon", "desecrate", "devil", "devilish", "diabolical", "disembodied", "doom", "doppelgänger", 
    "dread", "dreadful", "drear", "dusk", "eclipse", "eclipsed", "eerie", "eldritch", "ensnare", "entrails", 
    "ephemeral", "eternal", "ethereal", "evil", "exhumed", "exorcism", "eyeless", "fable", "fabled", "fae", 
@@ -54,21 +54,18 @@ EMOJI_LIST = ["🎃", "👻", "🕸️", "🕷️", "💀", "⚰️", "🪦", "�
 
 async def react_to_message(client, message):
     try:
-        # Ignore messages from the bot itself
         if message.author == client.user:
             return
 
-        # Lowercase and split the message content into words
+        # Convert message content to lowercase words
         message_words = set(word.lower() for word in message.content.split())
-
-        # Check if there's an intersection between message_words and BANK_OF_WORDS
-        common_words = message_words.intersection(BANK_OF_WORDS)
-
-        # React with a random emoji if there’s a match, log only matches
-        if common_words:
-            # logger.info(f"Found matching words: {common_words}")
-            random_emoji = random.choice(EMOJI_LIST)
-            await message.add_reaction(random_emoji)
-            await asyncio.sleep(1)  # Prevent rate-limiting
+        
+        # Check if message contains any Halloween-related words
+        if message_words.intersection(BANK_OF_WORDS):
+            # Ensure no reaction duplicates
+            if not any(reaction.me for reaction in message.reactions):
+                random_emoji = random.choice(EMOJI_LIST)
+                await message.add_reaction(random_emoji)
+                await asyncio.sleep(1)  # Rate limit prevention
     except discord.HTTPException as e:
         logger.error(f"Failed to add reaction: {e}")
