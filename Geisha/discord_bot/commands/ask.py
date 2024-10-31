@@ -23,12 +23,16 @@ async def execute(client, message, args):
         return
 
     user_query = " ".join(args)  # Combine arguments to form the user's question
+
     try:
-        response_text = await get_openai_response(user_query)  # Call OpenAI function
+        # Show typing indicator while processing the request
+        async with message.channel.typing():
+            response_text = await get_openai_response(user_query)  # Call OpenAI function
         await message.reply(response_text)  # Reply with the response from OpenAI
     except Exception as e:
         print(f"Error occurred when calling OpenAI: {e}")
         await message.author.send("An error occurred while processing your request. Please try again later.")
+
 
 async def handle_mention(client, message):
     """

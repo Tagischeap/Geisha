@@ -20,7 +20,8 @@ def roll_dice(amount, size, explode=False):
     for _ in range(amount):
         roll = random.randint(1, size)
         rolls.append(roll)
-        while explode and roll == size:
+        # Prevent infinite loop for 1-sided dice with explode
+        while explode and roll == size and size > 1:
             roll = random.randint(1, size)
             rolls.append(roll)
     return rolls
@@ -32,12 +33,12 @@ def parse_roll_command(input_text):
     if not matches:
         return "Invalid roll format."
 
-    math_string = input_text
+    # Replace any standalone `d#` with `1d#` in the input string for consistent parsing
+    math_string = re.sub(r'(?<!\d)d(\d+)', r'1d\1', input_text.lower())
     single_roll = (len(matches) == 1 and (matches[0][0] == '' or matches[0][0] == '1'))
-    broke = False
 
     for amount, size, explode in matches:
-        amount = int(amount) if amount else 1
+        amount = int(amount) if amount else 1  # Default to 1 if amount is empty
         size = int(size)
         explode = explode == '!'
 
