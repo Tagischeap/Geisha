@@ -13,7 +13,6 @@ PREFIX = env_vars['PREFIX']
 import discord
 from config.reload_manager import start_observer
 from events.on_message import on_message as handle_on_message
-from events.on_message_react import react_to_message
 from events.on_ready import on_ready as handle_on_ready
 
 intents = discord.Intents.default()
@@ -33,9 +32,10 @@ async def on_ready():
 async def on_message(message):
     await handle_on_message(client, message)
 
-@client.event
-async def on_reaction_add(reaction, user):
-    await react_to_message(client, reaction.message)
+# Removed on_reaction_add to prevent duplicate triggering
+# @client.event
+# async def on_reaction_add(reaction, user):
+#     await react_to_message(client, reaction.message)
 
 if __name__ == "__main__":
     try:
