@@ -1,8 +1,7 @@
 # main.py
-
 from config.logging_config import setup_logging
 from config.env import load_and_validate_env_vars
-from core.command_loader import load_commands
+from core.command_loader import load_commands, COMMANDS  # Import COMMANDS here
 
 logger = setup_logging()
 env_vars = load_and_validate_env_vars()
@@ -20,7 +19,8 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 logger.info("Starting the bot...")
-commands = load_commands()
+load_commands()  # Populate the global COMMANDS dictionary
+
 observer = start_observer(client)
 
 @client.event
@@ -31,11 +31,6 @@ async def on_ready():
 @client.event
 async def on_message(message):
     await handle_on_message(client, message)
-
-# Removed on_reaction_add to prevent duplicate triggering
-# @client.event
-# async def on_reaction_add(reaction, user):
-#     await react_to_message(client, reaction.message)
 
 if __name__ == "__main__":
     try:

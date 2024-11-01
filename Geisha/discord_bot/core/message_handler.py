@@ -1,4 +1,3 @@
-# core/message_handler.py
 import discord
 import logging
 import os
@@ -10,40 +9,45 @@ load_dotenv()
 
 # Retrieve the command prefix from environment variables, default to "!" if not specified
 PREFIX = os.getenv('PREFIX', '!')
-
 logger = logging.getLogger(__name__)
 
 async def process_message(client, message: discord.Message):
     """
-    Processes incoming messages, handling both command prefixes and mentions,
-    then delegates command execution to the command handler.
+    Processes messages, routing recognized commands and defaulting unrecognized commands to `ask`.
     """
-    # Check if the bot is mentioned
-    if client.user in message.mentions:
-        # Remove the mention part from the message content
-        content_after_mention = message.content.replace(f'<@{client.user.id}>', '').strip()
+    logger.debug(f"COMMANDS dictionary at runtime in process_message: {COMMANDS}")
 
-        # Default to 'ask' command if no valid command follows the mention
-        if not content_after_mention:
-            command_name = 'ask'
-            args = []
-        else:
-            # Split remaining content and treat the first word as the command
+    if client.user in message.mentions:
+        content_after_mention = message.content.replace(f'<@{client.user.id}>', '').strip()
+        if content_after_mention:
             args = content_after_mention.split()
             command_name = args.pop(0).lower()
+        else:
+            await message.channel.send("Please specify a command after mentioning me.")
+            return
 
-            # If the command is not recognized, default to 'ask' and pass the full content as an argument
-            if command_name not in COMMANDS:
-                command_name = 'ask'
-                args.insert(0, content_after_mention)  # Treat entire content as ask argument
-
-        await handle_command(client, message, command_name, args)
-        return
-
-    # Handle prefixed commands using the configured PREFIX
-    if message.content.startswith(PREFIX):
+    elif message.content.startswith(PREFIX):
         command_name, *args = message.content[len(PREFIX):].strip().split()
+    else:
+        return  # Ignore non-command messages
+
+    # Check if command_name exists in COMMANDS or any alias
+    command = COMMANDS.get(command_name) or next(
+        (cmd for cmd in COMMANDS.values() if command_name in cmd['aliases']), None
+    )
+
+    if command:
         await handle_command(client, message, command_name, args)
     else:
-        # Log non-command messages
-        logger.info(f"Received non-command message from {message.author}: {message.content.strip().lower()}")
+        # Fallback to 'ask' if command not found
+        logger.info(f"Unknown command '{command_name}', defaulting to 'ask'")
+        
+        # Check if 'ask' exists, reload if necessary
+        if 'ask' not in COMMANDS:
+            from core.command_loader import load_commands
+            COMMANDS.update(load_commands())  # Reload COMMANDS if 'ask' is missing
+
+        if 'ask' in COMMANDS:
+            await COMMANDS['ask']['execute'](client, message, [command_name] + args)
+        else:
+            await message.channel.send("The `ask` command is not available.")
