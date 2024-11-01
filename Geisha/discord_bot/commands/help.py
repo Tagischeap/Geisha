@@ -2,19 +2,20 @@
 import discord
 import os
 from dotenv import load_dotenv
-from commands import commands  # Import commands dictionary directly
 
 # Load environment variables
 load_dotenv()
 prefix = os.getenv('PREFIX', '!')  # Retrieve prefix from environment or default to "!"
 
+# Define command metadata
 name = 'help'
 aliases = ['commands']
 description = 'List all of my commands or info about a specific command.'
 usage = 'help <command>'
 cooldown = 5  # Cooldown of 5 seconds
 
-async def execute(client, message, args):
+# Updated execute function to accept `commands` as a parameter
+async def execute(client, message, args, commands):
     data = []
 
     # List all commands if no specific command is requested

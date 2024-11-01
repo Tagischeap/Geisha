@@ -1,3 +1,4 @@
+# core/command_handler.py
 import importlib
 import os
 import logging
@@ -8,11 +9,7 @@ logger = logging.getLogger(__name__)
 COMMANDS = {}
 
 def load_commands():
-    """Loads command modules if COMMANDS is empty to avoid duplicate loading."""
-    if COMMANDS:
-        logger.info("Commands already loaded; skipping duplicate load.")
-        return
-
+    """Dynamically loads command modules."""
     commands_path = os.path.join(os.path.dirname(__file__), '../commands')
     command_files = [f[:-3] for f in os.listdir(commands_path) if f.endswith('.py') and f != '__init__.py']
 
@@ -21,13 +18,13 @@ def load_commands():
             module = importlib.import_module(f'commands.{command_name}')
             execute_func = getattr(module, 'execute', None)
             name = getattr(module, 'name', command_name)
-            aliases = getattr(module, 'aliases\n', [])
+            aliases = getattr(module, 'aliases', [])
             description = getattr(module, 'description', 'No description provided.')
             usage = getattr(module, 'usage', '')
-            cooldown = getattr(module, 'cooldown', 3)  # Default cooldown if not specified
+            cooldown = getattr(module, 'cooldown', 3)
 
             if execute_func:
-                # Register the command under both its name and aliases
+                # Store aliases within the command dictionary
                 COMMANDS[name] = {
                     'execute': execute_func,
                     'name': name,
@@ -36,10 +33,6 @@ def load_commands():
                     'usage': usage,
                     'cooldown': cooldown
                 }
-                # Add aliases to the COMMANDS dictionary for quick lookup
-                for alias in aliases:
-                    COMMANDS[alias] = COMMANDS[name]
-                
                 logger.info(f"Loaded command: {name} with aliases {aliases}")
             else:
                 logger.warning(f"No execute function found in {command_name}")
@@ -49,9 +42,12 @@ def load_commands():
 
 async def handle_command(client, message: discord.Message, command_name: str, args: list):
     """
-    Executes a command if found in the COMMANDS dictionary.
+    Executes a command if found in the COMMANDS dictionary, considering aliases.
     """
-    command = COMMANDS.get(command_name)
+    # Check for the command by name or alias
+    command = COMMANDS.get(command_name) or next(
+        (cmd for cmd in COMMANDS.values() if command_name in cmd['aliases']), None
+    )
 
     if command:
         try:
@@ -61,8 +57,8 @@ async def handle_command(client, message: discord.Message, command_name: str, ar
             logger.error(f"Error executing command '{command_name}': {e}")
             await message.channel.send(f"An error occurred while executing `{command_name}`.")
     else:
-        # Provide a friendly error message if command or alias is unknown
+        # Friendly message if command or alias is unknown
         logger.warning(f"Unknown command: '{command_name}' from {message.author}")
         await message.channel.send(
-            f"Unknown command: `{command_name}`. Type `!help` to see available commands."
+            f"Unknown command: `{command_name}`. Type `{os.getenv('PREFIX', '!')}help` to see available commands."
         )
