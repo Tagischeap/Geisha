@@ -21,5 +21,5 @@ def load_commands():
                 'usage': module.usage,
                 'cooldown': getattr(module, 'cooldown', 3),
             }
-            logger.info(f"Loaded command: {command_name} with aliases {module.aliases}")
+            logger.info(f"Loaded command: {command_name}")
     return commands

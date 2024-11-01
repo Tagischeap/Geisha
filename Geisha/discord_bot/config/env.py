@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 # Load environment variables from keys.env
 load_dotenv(dotenv_path='keys.env')
 
-REQUIRED_VARS = ['DISCORD_TOKEN', 'OPENAI_API_KEY', 'PREFIX']
+REQUIRED_VARS = ['DISCORD_TOKEN', 'DISCORD_TOKEN2', 'OPENAI_API_KEY', 'PREFIX']
 
 def load_and_validate_env_vars():
     """Loads and validates essential environment variables."""
