@@ -1,32 +1,49 @@
 import os
+import aiohttp
+import asyncio
 import logging
 from openai import AsyncOpenAI
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv(dotenv_path='keys.env')
-
-# Initialize AsyncOpenAI client
+# Load environment variables and initialize logger
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OpenAI API key not found. Please check your .env file.")
-
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-
 logger = logging.getLogger(__name__)
 
-async def get_openai_response(user_query):
+# Retry parameters
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
+async def get_openai_response(user_query: str) -> str:
     """Fetches a response from the OpenAI API based on the user's query."""
-    try:
-        response = await client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_query}
-            ],
-            model="gpt-4",
-        )
-        # Correctly access the response content
-        return response.choices[0].message.content  # Use dot notation instead of subscript
-    except Exception as e:
-        logger.error(f"OpenAI API error: {e}")
-        return "An error occurred while processing your request."
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            # Attempt to fetch response from OpenAI API
+            response = await client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": user_query}
+                ],
+                model="gpt-4",
+            )
+            # Return the response content
+            return response.choices[0].message.content
+
+        except aiohttp.ClientError as e:
+            logger.error(f"Network error on attempt {attempt} when calling OpenAI: {e}")
+            if attempt == MAX_RETRIES:
+                return "Network issue while contacting OpenAI. Please try again later."
+        
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout error on attempt {attempt} when calling OpenAI")
+            if attempt == MAX_RETRIES:
+                return "Request to OpenAI timed out. Please try again later."
+        
+        except Exception as e:
+            logger.error(f"Unexpected error when calling OpenAI: {e}")
+            return "An unexpected error occurred while processing your request."
+        
+        # Delay before retrying
+        await asyncio.sleep(RETRY_DELAY)
+
+    # Fallback response if all retries fail
+    return "OpenAI service is currently unavailable. Please try again later."

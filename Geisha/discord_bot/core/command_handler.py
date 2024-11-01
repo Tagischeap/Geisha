@@ -21,7 +21,7 @@ def load_commands():
             module = importlib.import_module(f'commands.{command_name}')
             execute_func = getattr(module, 'execute', None)
             name = getattr(module, 'name', command_name)
-            aliases = getattr(module, 'aliases', [])
+            aliases = getattr(module, 'aliases\n', [])
             description = getattr(module, 'description', 'No description provided.')
             usage = getattr(module, 'usage', '')
             cooldown = getattr(module, 'cooldown', 3)  # Default cooldown if not specified
