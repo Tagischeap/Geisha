@@ -7,7 +7,7 @@ description = (
     'Flips a coin once or multiple times.\n'
     'Specify a number to flip multiple times (e.g., `flip 10`).'
 )
-usage = 'flip [count]'
+usage = '<count>'
 cooldown = 5
 MAX_FLIPS = 100
 

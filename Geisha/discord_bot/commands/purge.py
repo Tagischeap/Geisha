@@ -5,7 +5,7 @@ from discord.ext import commands
 name = 'purge'
 aliases = ['delete']
 description = 'Deletes messages in bulk (Admins only)'
-usage = 'purge 10'
+usage = '<ammount>'
 
 async def execute(self, message, args):
     """

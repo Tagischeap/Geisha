@@ -5,7 +5,7 @@ from discord.ext import commands
 name = 'user'
 aliases = ['icon', 'pfp', 'avatar', 'avi']
 description = 'Returns user information.'
-usage = 'user [mention]'  # Usage string
+usage = '<user mention>'  # Usage string
 
 # Execute function for the user command
 async def execute(client, message, args):

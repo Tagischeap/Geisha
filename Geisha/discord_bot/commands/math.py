@@ -7,7 +7,7 @@ description = (
     'Solves basic arithmetic expressions.\n'
     'Supported operations: +, -, *, /, ^ (exponent).'
 )
-usage = 'expression'
+usage = '<expression>'
 cooldown = 5
 
 def evaluate_expression(math_string):

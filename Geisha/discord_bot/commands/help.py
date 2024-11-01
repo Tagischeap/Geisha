@@ -11,7 +11,7 @@ prefix = os.getenv('PREFIX', '!')  # Retrieve prefix from environment or default
 name = 'help'
 aliases = ['commands']
 description = 'List all of my commands or get info about a specific command.'
-usage = 'help <command>'
+usage = '<command>'
 cooldown = 5
 
 # Execute function for the help command
