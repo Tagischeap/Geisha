@@ -57,70 +57,60 @@ import pytz
 
 def parse_datetime(date_str, now, timezone):
     """
-    Parses a date-time string and fills in missing parts with defaults.
-    Adjusts for timezone.
+    Parses a date-time string, filling missing parts with defaults and localizing to timezone.
     """
     tz = pytz.timezone(timezone) if timezone in pytz.all_timezones else pytz.utc
 
     try:
-        # Handle AM/PM times first
+        # If no date_str provided, return current time in specified timezone
+        if not date_str:
+            return now.astimezone(tz)
+
         date_str = date_str.strip().lower().replace(" ", "")
         is_pm = date_str.endswith("pm") or date_str.endswith("p")
         is_am = date_str.endswith("am") or date_str.endswith("a")
 
         if is_am or is_pm:
-            # Remove 'am', 'pm', 'a', 'p' suffix for consistent parsing
             date_str = date_str.replace("am", "").replace("pm", "").replace("a", "").replace("p", "")
-
-            # Parse hour and minute from cleaned date_str
-            if ":" in date_str:
-                hour, minute = map(int, date_str.split(":"))
-            else:
-                hour = int(date_str)
-                minute = 0
-
-            # Adjust hour for PM, keeping 12 PM as 12 and converting 1 PM - 11 PM appropriately
+            hour = int(date_str.split(":")[0]) if ":" in date_str else int(date_str)
+            minute = int(date_str.split(":")[1]) if ":" in date_str else 0
             if is_pm:
                 hour = hour % 12 + 12
-            elif is_am:
-                hour = hour % 12  # Ensures 12 AM becomes 0 for midnight
+            dt = datetime.datetime(now.year, now.month, now.day, hour, minute)
 
-            dt = datetime.datetime(now.year, now.month, now.day, hour, minute, 0)
-
-        elif len(date_str) == 5 and date_str.count("-") == 1:  # Format MM-DD
+        elif len(date_str) == 5 and date_str.count("-") == 1:
             dt = datetime.datetime.strptime(f"{now.year}-{date_str}", "%Y-%m-%d")
-            dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            dt = dt.replace(hour=now.hour, minute=now.minute)
 
-        elif len(date_str) == 7:  # Format YYYY-MM
+        elif len(date_str) == 7:
             dt = datetime.datetime.strptime(date_str + "-01", "%Y-%m-%d")
-            dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            dt = dt.replace(hour=0, minute=0)
 
-        elif len(date_str) == 4:  # Format YYYY
-            dt = datetime.datetime(int(date_str), 1, 1, 0, 0, 0)
+        elif len(date_str) == 4:
+            dt = datetime.datetime(int(date_str), 1, 1, 0, 0)
 
-        elif len(date_str) == 10:  # Format YYYY-MM-DD
+        elif len(date_str) == 10:
             dt = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-            dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            dt = dt.replace(hour=now.hour, minute=now.minute)
 
-        elif "T" in date_str:  # Full date and time, e.g., YYYY-MM-DDTHH:MM
+        elif "T" in date_str:
             dt = datetime.datetime.fromisoformat(date_str)
 
-        elif len(date_str) == 2:  # Only hour provided (HH)
+        elif len(date_str) == 2:
             hour = int(date_str)
-            dt = datetime.datetime(now.year, now.month, now.day, hour, 0, 0)
+            dt = datetime.datetime(now.year, now.month, now.day, hour, 0)
 
-        elif len(date_str) == 5:  # Only time provided (HH:MM)
+        elif len(date_str) == 5:
             hour, minute = map(int, date_str.split(":"))
-            dt = datetime.datetime(now.year, now.month, now.day, hour, minute, 0)
+            dt = datetime.datetime(now.year, now.month, now.day, hour, minute)
 
         else:
-            dt = now  # Default to current time if no recognized date format provided
+            dt = now
 
-        # Only localize if dt is naive (i.e., no timezone information)
         if dt.tzinfo is None:
             dt = tz.localize(dt, is_dst=None)
 
-        return dt  # Return localized time in specified timezone
+        return dt
 
     except Exception as e:
-        return now  # Default to current UTC time in case of an error
+        return now
