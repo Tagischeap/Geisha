@@ -1,5 +1,6 @@
 discord.py
 openai
+requests
 python-dotenv
 python-dateutil
 watchdog

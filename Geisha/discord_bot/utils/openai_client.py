@@ -1,11 +1,15 @@
 # utils/openai_client.py
+
+import openai  # Import added for `generate_image` function
 import os
 import aiohttp
 import asyncio
 import logging
 from openai import AsyncOpenAI
+from dotenv import load_dotenv
 
 # Load environment variables and initialize logger
+load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 logger = logging.getLogger(__name__)
@@ -62,3 +66,28 @@ async def get_openai_response(user_query: str, model_version: str = "gpt-4") -> 
 
     # Fallback response if all retries fail
     return "OpenAI service is currently unavailable. Please try again later."
+
+def generate_image(prompt, model="dall-e-3", size="1024x1024", quality="standard", n=1):
+    """
+    Generates an image using DALL-E's API.
+
+    Parameters:
+        prompt (str): Description for the image to generate.
+        model (str): Model name, e.g., "dall-e-3".
+        size (str): Image size, e.g., "1024x1024".
+        quality (str): Quality setting, default is "standard".
+        n (int): Number of images to generate.
+
+    Returns:
+        str: URL of the generated image.
+    """
+    client = openai.OpenAI()  # Initialize the OpenAI client
+    response = client.images.generate(
+        model=model,
+        prompt=prompt,
+        size=size,
+        quality=quality,
+        n=n
+    )
+    # Extract and return the URL of the first image
+    return response.data[0].url
