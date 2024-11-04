@@ -10,8 +10,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 logger = logging.getLogger(__name__)
 
-# Path to the external system message file
-system_message_path = '/mnt/data/discord_bot/discord_bot/utils/system_message.txt'
+# Set path relative to the script's location
+system_message_path = os.path.join(os.path.dirname(__file__), 'system_message.txt')
 
 # Retry parameters
 MAX_RETRIES = 3
