@@ -21,15 +21,15 @@ async def get_openai_response(user_query: str, model_version: str = "gpt-4") -> 
     """Fetches a response from the OpenAI API based on the user's query."""
     # Map provided version to the corresponding model
     model = {
-        "default": "gpt-o1-preview",
+        "default": "chatgpt-4o-latest",
         "3.5": "gpt-3.5-turbo",
         "4": "gpt-4",
         "turbo": "gpt-4-turbo",
         "4o": "gpt-4o",
-        "o1": "gpt-o1-mini",
-        "o1p": "gpt-o1-preview",
+        "o1": "o1-mini",
+        "o1p": "o1-preview",
     }.get(model_version, model_version)  # Use provided model_version if not in dictionary
-
+    logger.info(f"Requested model version: {model_version}")
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             # Attempt to fetch response from OpenAI API
