@@ -40,7 +40,7 @@ async def process_message(client, message: discord.Message):
         await handle_command(client, message, command_name, args)
     else:
         # Fallback to 'ask' if command not found
-        logger.info(f"Unknown command '{command_name}', defaulting to 'ask'")
+        #logger.info(f"Unknown command '{command_name}', defaulting to 'ask'")
         
         # Check if 'ask' exists, reload if necessary
         if 'ask' not in COMMANDS:

@@ -30,22 +30,28 @@ async def execute(client, message, args):
     # Collect the conversation chain
     conversation_chain = []
     current_message = message
+
     while current_message.reference:  # Traverse through previous replies
         replied_message = await message.channel.fetch_message(current_message.reference.message_id)
+        
         if replied_message.author == client.user:
+            # Format bot's response without user mention
             conversation_chain.insert(0, f"Bot: {replied_message.content}")
         else:
-            conversation_chain.insert(0, f"{replied_message.author.name}: {replied_message.content}")
+            # Format with user mention in <@user_id> Username: format
+            mention_format = f"<@{replied_message.author.id}> {replied_message.author.name}: {replied_message.content}"
+            conversation_chain.insert(0, mention_format)
+        
         current_message = replied_message
 
-    # Replace each user mention in user_query with the username
-    for user in message.mentions:
-        mention_str = f"<@{user.id}>"
-        user_query = user_query.replace(mention_str, user.name)  # Replace mention with username
-
-    # Create the prompt with rules, conversation history, and user query
+    # Convert conversation chain into formatted text
     conversation_text = "\n".join(conversation_chain)
-    full_prompt = f"{rules_text}\n\n{conversation_text}\n{message.author.name}: {user_query}\nBot: --Insert what bot says--"
+
+    # Format the user's current message (user_query) in <@user_id> Username: format
+    user_query = f"<@{message.author.id}> {message.author.name}: " + " ".join(args)
+
+    # Combine everything into the final prompt
+    full_prompt = f"{conversation_text}\n{user_query}\nBot: --Insert what bot says--"
 
     try:
         # Show typing indicator while processing the request
