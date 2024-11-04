@@ -18,16 +18,39 @@ async def execute(client, message, args):
     """
     Executes the ask command by calling OpenAI with the user's query.
     """
+
+    rules_text = (""
+    )
     if not args:
         await message.author.send(f"Please provide a question after the command, e.g., `{prefix}ask How are you?`")
         return
 
-    user_query = " ".join(args)  # Combine arguments to form the user's question
+    user_query = " ".join(args)  # Combine arguments to form the user's question# Initialize the conversation chain
+    
+    # Collect the conversation chain
+    conversation_chain = []
+    current_message = message
+    while current_message.reference:  # Traverse through previous replies
+        replied_message = await message.channel.fetch_message(current_message.reference.message_id)
+        if replied_message.author == client.user:
+            conversation_chain.insert(0, f"Bot: {replied_message.content}")
+        else:
+            conversation_chain.insert(0, f"{replied_message.author.name}: {replied_message.content}")
+        current_message = replied_message
+
+    # Replace each user mention in user_query with the username
+    for user in message.mentions:
+        mention_str = f"<@{user.id}>"
+        user_query = user_query.replace(mention_str, user.name)  # Replace mention with username
+
+    # Create the prompt with rules, conversation history, and user query
+    conversation_text = "\n".join(conversation_chain)
+    full_prompt = f"{rules_text}\n\n{conversation_text}\n{message.author.name}: {user_query}\nBot: --Insert what bot says--"
 
     try:
         # Show typing indicator while processing the request
         async with message.channel.typing():
-            response_text = await get_openai_response(user_query)  # Call OpenAI function
+            response_text = await get_openai_response(full_prompt)  # Pass full_prompt to OpenAI
         await message.reply(response_text)  # Reply with the response from OpenAI
     except Exception as e:
         print(f"Error occurred when calling OpenAI: {e}")

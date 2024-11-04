@@ -1,3 +1,4 @@
+# 
 import os
 import aiohttp
 import asyncio
@@ -8,6 +9,9 @@ from openai import AsyncOpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 logger = logging.getLogger(__name__)
+
+# Path to the external system message file
+system_message_path = '/mnt/data/discord_bot/discord_bot/utils/system_message.txt'
 
 # Retry parameters
 MAX_RETRIES = 3
@@ -20,11 +24,12 @@ async def get_openai_response(user_query: str) -> str:
             # Attempt to fetch response from OpenAI API
             response = await client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "system", "content":  open(system_message_path, "r").read()},
                     {"role": "user", "content": user_query}
                 ],
-                model="gpt-4",
+                model="gpt-4o",
             )
+            print(system_message_path)
             # Return the response content
             return response.choices[0].message.content
 
