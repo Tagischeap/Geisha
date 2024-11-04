@@ -1,6 +1,9 @@
+# commands/ask.py
+
 import discord
 import os
 from dotenv import load_dotenv
+import re
 from utils.openai_client import get_openai_response  # Ensure this function is implemented
 
 # Load environment variables
@@ -18,16 +21,21 @@ async def execute(client, message, args):
     """
     Executes the ask command by calling OpenAI with the user's query.
     """
-
-    rules_text = (""
-    )
     if not args:
         await message.author.send(f"Please provide a question after the command, e.g., `{prefix}ask How are you?`")
         return
 
-    user_query = " ".join(args)  # Combine arguments to form the user's question# Initialize the conversation chain
-    
-    # Collect the conversation chain
+    # Check for a version argument in square brackets [version]
+    match = re.match(r'\[(.*?)\]', args[0])
+    if match:
+        version = match.group(1)  # Extract version from [version]
+        args = args[1:]  # Remove the version argument from args
+    else:
+        version = "default"  # Define the default version
+
+    user_query = " ".join(args)  # Combine remaining args to form the user's question
+
+    # Initialize the conversation chain
     conversation_chain = []
     current_message = message
 
@@ -56,12 +64,11 @@ async def execute(client, message, args):
     try:
         # Show typing indicator while processing the request
         async with message.channel.typing():
-            response_text = await get_openai_response(full_prompt)  # Pass full_prompt to OpenAI
+            response_text = await get_openai_response(full_prompt, model_version=version)  # Pass version to OpenAI
         await message.reply(response_text)  # Reply with the response from OpenAI
     except Exception as e:
         print(f"Error occurred when calling OpenAI: {e}")
         await message.author.send("An error occurred while processing your request. Please try again later.")
-
 
 async def handle_mention(client, message):
     """

@@ -1,4 +1,4 @@
-# 
+# utils/openai_client.py
 import os
 import aiohttp
 import asyncio
@@ -17,19 +17,29 @@ system_message_path = os.path.join(os.path.dirname(__file__), 'system_message.tx
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
 
-async def get_openai_response(user_query: str) -> str:
+async def get_openai_response(user_query: str, model_version: str = "gpt-4") -> str:
     """Fetches a response from the OpenAI API based on the user's query."""
+    # Map provided version to the corresponding model
+    model = {
+        "default": "gpt-o1-preview",
+        "3.5": "gpt-3.5-turbo",
+        "4": "gpt-4",
+        "turbo": "gpt-4-turbo",
+        "4o": "gpt-4o",
+        "o1": "gpt-o1-mini",
+        "o1p": "gpt-o1-preview",
+    }.get(model_version, model_version)  # Use provided model_version if not in dictionary
+
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             # Attempt to fetch response from OpenAI API
             response = await client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content":  open(system_message_path, "r").read()},
+                    {"role": "system", "content": open(system_message_path, "r").read()},
                     {"role": "user", "content": user_query}
                 ],
-                model="gpt-4o",
+                model=model,
             )
-            print(system_message_path)
             # Return the response content
             return response.choices[0].message.content
 
