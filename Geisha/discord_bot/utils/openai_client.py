@@ -67,27 +67,31 @@ async def get_openai_response(user_query: str, model_version: str = "gpt-4") -> 
     # Fallback response if all retries fail
     return "OpenAI service is currently unavailable. Please try again later."
 
-def generate_image(prompt, model="dall-e-3", size="1024x1024", quality="standard", n=1):
-    """
-    Generates an image using DALL-E's API.
+async def generate_image(prompt, model="dall-e-3", size="1024x1024", quality="standard", n=1):
+    print(f"generate_image: Generating image for prompt '{prompt}' with size {size}")  # Debug
+    url = "https://api.openai.com/v1/images/generations"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    json_data = {
+        "model": model,
+        "prompt": prompt,
+        "size": size,
+        "quality": quality,
+        "n": n
+    }
 
-    Parameters:
-        prompt (str): Description for the image to generate.
-        model (str): Model name, e.g., "dall-e-3".
-        size (str): Image size, e.g., "1024x1024".
-        quality (str): Quality setting, default is "standard".
-        n (int): Number of images to generate.
-
-    Returns:
-        str: URL of the generated image.
-    """
-    client = openai.OpenAI()  # Initialize the OpenAI client
-    response = client.images.generate(
-        model=model,
-        prompt=prompt,
-        size=size,
-        quality=quality,
-        n=n
-    )
-    # Extract and return the URL of the first image
-    return response.data[0].url
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=json_data) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    print(f"generate_image: Image URL received: {data['data'][0]['url']}")  # Debug
+                    return data['data'][0]['url']
+                else:
+                    print(f"generate_image: Failed with status {response.status}")  # Debug
+                    return None
+    except Exception as e:
+        print(f"generate_image: Error occurred - {e}")  # Debug for exception
+        return None
