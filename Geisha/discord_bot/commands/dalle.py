@@ -1,3 +1,5 @@
+# commands/dalle.py
+
 import aiohttp
 import discord
 import io
@@ -16,11 +18,17 @@ async def process_queue(client):
     while True:
         print("Waiting for next item in queue...")  # Confirm the loop is active
         message, description = await client.task_queue.get()  # Use client.task_queue
+        await message.remove_reaction('👀', client.user)
         print(f"process_queue: Processing request - {description}")  # Debug output for each item
 
         try:
             await message.add_reaction('✏️')
             image_url = await generate_image(description, size="1024x1024")
+            if image_url == "policy_violation":
+                await message.add_reaction('👄')  # Policy violation reaction
+            elif image_url == "bad_request":
+                await message.add_reaction('❓')  # Indicate a bad request
+
             if image_url:
                 # Attempt to download the image asynchronously
                 async with aiohttp.ClientSession() as session:

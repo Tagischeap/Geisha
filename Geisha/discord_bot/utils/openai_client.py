@@ -89,9 +89,20 @@ async def generate_image(prompt, model="dall-e-3", size="1024x1024", quality="st
                     data = await response.json()
                     print(f"generate_image: Image URL received: {data['data'][0]['url']}")  # Debug
                     return data['data'][0]['url']
+                
+                elif response.status == 400:
+                    error_details = await response.json()  # Get error details
+                    print(f"generate_image: Failed with status 400 - {error_details}")  # Debug
+                    # Check if error message indicates a policy violation
+                    if error_details.get("error", {}).get("code") == "content_policy_violation":
+                        return "policy_violation"
+                    else:
+                        return "bad_request"
+                
                 else:
                     print(f"generate_image: Failed with status {response.status}")  # Debug
                     return None
+
     except Exception as e:
-        print(f"generate_image: Error occurred - {e}")  # Debug for exception
+        # print(f"generate_image: Error occurred - {e}")  # Debug for exceptions
         return None
