@@ -1,8 +1,10 @@
 import asyncio
+import threading
 from config.logging_config import setup_logging
 from config.env import load_and_validate_env_vars
 from core.command_loader import load_commands
 from commands.dalle import process_queue  # Import process_queue directly
+from web.server import start_server
 
 logger = setup_logging()
 env_vars = load_and_validate_env_vars()
@@ -15,12 +17,17 @@ from config.reload_manager import start_observer
 from events.on_message import on_message as handle_on_message
 from events.on_ready import on_ready as handle_on_ready
 
+flask_thread = threading.Thread(target=start_server)
+flask_thread.daemon = True
+flask_thread.start()
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
 logger.info("Starting the bot...")
 load_commands()  # Populate the global COMMANDS dictionary
+
 
 # Start the observer for reloading
 observer = start_observer(client)
