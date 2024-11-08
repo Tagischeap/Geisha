@@ -7,16 +7,28 @@ import uuid
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
 socketio = SocketIO(app)
-
 def get_public_ip():
     try:
-        # Check if we're on AWS or a remote server by trying to access the AWS metadata service
-        # This will fail if not on AWS, so we use localhost in that case
-        response = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4", timeout=1)
-        response.raise_for_status()
-        return response.text
-    except requests.RequestException:
-        return "localhost"  # Use localhost for local testing
+        # Request a token for IMDSv2
+        token_response = requests.put(
+            "http://169.254.169.254/latest/api/token",
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
+            timeout=2
+        )
+        token_response.raise_for_status()
+        token = token_response.text
+        
+        # Use the token to retrieve the public IP
+        ip_response = requests.get(
+            "http://169.254.169.254/latest/meta-data/public-ipv4",
+            headers={"X-aws-ec2-metadata-token": token},
+            timeout=2
+        )
+        ip_response.raise_for_status()
+        return ip_response.text
+    except requests.RequestException as e:
+        logging.error("Failed to retrieve public IP from AWS metadata service", exc_info=e)
+        return "localhost"
 
 # Get the server's public IP at startup
 public_ip = get_public_ip()

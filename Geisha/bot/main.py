@@ -8,7 +8,7 @@ from commands.dalle import process_queue  # Import process_queue directly
 logger = setup_logging()
 env_vars = load_and_validate_env_vars()
 
-DISCORD_TOKEN = env_vars['DISCORD_TOKEN2']
+DISCORD_TOKEN = env_vars['DISCORD_TOKEN']
 PREFIX = env_vars['PREFIX']
 
 import discord
