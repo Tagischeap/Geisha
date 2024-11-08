@@ -1,0 +1,8 @@
+discord.py
+openai
+flask
+flask-socketio
+requests
+python-dotenv
+python-dateutil
+watchdog
