@@ -1,48 +1,57 @@
-from flask import Flask, render_template, request
-import base64
-import discord
-import asyncio
+# web/server.py
+import requests
+from flask import Flask, jsonify, render_template
+from flask_socketio import SocketIO, emit
+import uuid
 
-# Initialize Flask app
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
+socketio = SocketIO(app)
 
-# Function to send the drawing to Discord
-async def send_drawing_to_discord(drawing_path):
-    from main import client  # Import the client here to avoid circular dependency
-    channel = client.get_channel(601259969601339402)  # Replace with your actual channel ID
+def get_public_ip():
+    try:
+        # Check if we're on AWS or a remote server by trying to access the AWS metadata service
+        # This will fail if not on AWS, so we use localhost in that case
+        response = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4", timeout=1)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException:
+        return "localhost"  # Use localhost for local testing
 
-    if channel is None:
-        print(f"Channel not found with ID: {601259969601339402}")
-        print("Available guilds and channels:")
-        for guild in client.guilds:
-            print(f"Guild: {guild.name} (ID: {guild.id})")
-            for channel in guild.channels:
-                print(f"  Channel: {channel.name} (ID: {channel.id})")
-        return  # Exit if the channel is not found
+# Get the server's public IP at startup
+public_ip = get_public_ip()
 
-    with open(drawing_path, "rb") as f:
-        discord_file = discord.File(f, filename="drawing.png")
-        await channel.send(file=discord_file, content="A new drawing has been submitted!")
+# Store active lobbies in memory (for a persistent setup, use a database)
+active_lobbies = {}
 
+@app.route('/api/create-lobby', methods=['POST'])
+def create_lobby():
+    # Generate a unique lobby ID and URL
+    lobby_id = str(uuid.uuid4())
+    lobby_url = f"http://{public_ip}:5000/lobby/{lobby_id}"  # Use the dynamic IP
+    
+    # Register the lobby
+    active_lobbies[lobby_id] = {"players": []}
 
+    # Return the lobby URL as JSON for the bot to share
+    return jsonify({"lobby_url": lobby_url})
 
-@app.route("/draw")
-def draw():
-    return render_template("draw.html")
+@app.route('/api/get-lobby-url', methods=['GET'])
+def get_lobby_url():
+    # Provide the base URL for lobby creation
+    return jsonify({"lobby_base_url": f"http://{public_ip}:5000/api/create-lobby"})
 
-@app.route("/submit_drawing", methods=["POST"])
-def submit_drawing():
-    drawing_data = request.json['drawing']
-    header, encoded = drawing_data.split(',', 1)
-    data = base64.b64decode(encoded)
+@app.route('/lobby/<lobby_id>')
+def lobby(lobby_id):
+    # Check if the lobby exists
+    if lobby_id in active_lobbies:
+        return render_template('lobby.html', lobby_id=lobby_id)
+    return "Lobby not found.", 404
 
-    image_path = "drawing.png"  # Change this as needed
-    with open(image_path, "wb") as f:
-        f.write(data)
+@socketio.on('draw')
+def handle_draw_event(data):
+    # Broadcast the drawing event to all clients in the same lobby
+    emit('draw', data, broadcast=True)
 
-    asyncio.run(send_drawing_to_discord(image_path))
-
-    return "Drawing submitted!"
-
-def start_server():
-    app.run(host="0.0.0.0", port=8080)
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000)
