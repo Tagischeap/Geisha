@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drawing Game</title>
-    <style>
-        canvas { border: 1px solid black; }
-    </style>
 </head>
 <body>
+    <span class="stage">
     <h1>Drawing Game</h1>
     <canvas id="drawingCanvas" width="500" height="500"></canvas>
     <button id="submitDrawing">Submit Drawing</button>

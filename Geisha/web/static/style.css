@@ -1,0 +1,59 @@
+/* Full viewport height, centering content */
+html, body {
+  background: #161616;
+  color: #dddddd;
+  font-family: Consolas, Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden; /* Prevent scroll if not needed */
+}
+
+/* Centered container */
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #323232;
+  width: 360px;
+  max-width: 90vw; /* Responsive width on smaller screens */
+  max-height: 640px; /* Ensures it stays within smaller viewports */
+  padding: 20px;
+  border: 5px solid #505050;
+  border-radius: 10px;
+  box-shadow: 1px 0px 25px black;
+}
+
+canvas { border: 1px solid black; }
+
+/* List styling */
+ul#links {
+  list-style-type: "> ";
+  padding-left: 0;
+  margin: 0;
+}
+
+li {
+  color: #606060;
+}
+
+/* Link styling */
+a {
+  color: #aaaaaa;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #7777df;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments for touch devices */
+@media (pointer: none), (pointer: coarse) {
+  .stage {
+      width: 75%;
+      max-height: 75%;
+      font-size: 30px;
+  }
+}
