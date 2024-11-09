@@ -1,3 +1,4 @@
+# bot/commands/lobby.py
 name = 'lobby'
 aliases = []
 description = 'Creates a lobby for a drawing game'

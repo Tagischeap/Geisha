@@ -1,85 +1,99 @@
-  
-<html>
-    <head>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <title>Lobby Manager</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-    </head>
-    <body>
+<!-- web/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lobby Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
     <span class="stage">
         <h1>Create, Join, or View a Lobby</h1>
-    
+        
         <!-- Form to Create a Lobby -->
         <button onclick="createLobby()">Create Lobby</button>
         <div id="lobby-info"></div>
-    
+        
         <h2>Active Lobbies</h2>
         <ul id="lobby-list"></ul>
-    
+        
         <!-- Join Lobby Section -->
         <h2>Join a Lobby</h2>
         <input type="text" id="username" placeholder="Your name" />
         <input type="text" id="lobby-id" placeholder="Lobby ID" />
         <button onclick="joinLobby()">Join Lobby</button>
-    
-        <!-- View Lobby Section -->
-        <h2>View a Lobby (without joining)</h2>
-        <input type="text" id="view-lobby-id" placeholder="Lobby ID" />
+        
         <button onclick="viewLobby()">View Lobby</button>
-    
+        
         <div id="lobby-messages"></div>
         <h3>Players in Lobby:</h3>
         <ul id="player-list"></ul>
-    
+        
         <script>
             const socket = io();
-    
+
             function createLobby() {
                 fetch('/api/create-lobby', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
                         const lobbyInfo = document.getElementById('lobby-info');
                         lobbyInfo.innerHTML = `Lobby created! URL: ${data.lobby_url}<br>Lobby ID: ${data.lobby_id}`;
-                        loadLobbies();
-                    });
+                        loadLobbies();  // Refresh the list of active lobbies
+                    })
+                    .catch(error => alert("Failed to create lobby. Please try again."));
             }
-    
+
             function loadLobbies() {
                 fetch('/api/active-lobbies')
                     .then(response => response.json())
                     .then(data => {
                         const lobbyList = document.getElementById('lobby-list');
                         lobbyList.innerHTML = '';
-                        data.forEach(lobby => {
+                        data.forEach(lobbyId => {
                             const li = document.createElement('li');
-                            li.textContent = lobby;
+                            
+                            // Create a clickable link for each lobby
+                            const link = document.createElement('a');
+                            link.href = '#';
+                            link.textContent = `${lobbyId}`;
+                            link.onclick = () => {
+                                document.getElementById('lobby-id').value = lobbyId;
+                                viewLobby();
+                            };
+                            
+                            li.appendChild(link);
                             lobbyList.appendChild(li);
                         });
-                    });
+                    })
+                    .catch(error => alert("Failed to load active lobbies."));
             }
-    
+
             function joinLobby() {
                 const lobbyId = document.getElementById('lobby-id').value.trim();
                 const username = document.getElementById('username').value.trim();
                 
                 if (lobbyId && username) {
-                    console.log(`Attempting to join lobby with ID: ${lobbyId} as user: ${username}`);
                     socket.emit('join_lobby', { lobby_id: lobbyId, username: username });
                 } else {
                     alert("Please enter both a username and lobby ID.");
                 }
             }
-    
+
             function viewLobby() {
-                const lobbyId = document.getElementById('view-lobby-id').value.trim();
-                
+            const lobbyId = document.getElementById('lobby-id').value.trim();
                 if (lobbyId) {
                     fetch(`/api/view-lobby/${lobbyId}`)
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("Lobby not found or server error.");
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             const playerList = document.getElementById('player-list');
                             playerList.innerHTML = '';  // Clear the current list
-    
+                            
                             if (data.error) {
                                 alert(data.error);
                             } else {
@@ -89,18 +103,23 @@
                                     playerList.appendChild(playerItem);
                                 });
                             }
+                        })
+                        .catch(error => {
+                            console.error("Error viewing lobby:", error);
+                            alert("Failed to view lobby. Please try again.");
                         });
                 } else {
                     alert("Please enter a lobby ID to view.");
                 }
             }
-    
+
+
             socket.on('user_joined', data => {
                 const messages = document.getElementById('lobby-messages');
                 const message = document.createElement('p');
                 message.textContent = `${data.username} has joined the lobby.`;
                 messages.appendChild(message);
-    
+
                 // Update the player list
                 const playerList = document.getElementById('player-list');
                 playerList.innerHTML = '';  // Clear current list
@@ -110,12 +129,14 @@
                     playerList.appendChild(playerItem);
                 });
             });
-    
+
             socket.on('error', data => {
                 alert(data.message);
             });
-    
+
+            // Load active lobbies when the page is first loaded
             loadLobbies();
         </script>
-    </body>
-    </html>
+    </span>
+</body>
+</html>
