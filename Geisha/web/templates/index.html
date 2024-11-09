@@ -1,4 +1,3 @@
-<!-- web/templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,135 +7,171 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
 </head>
 <body>
-    <span class="stage">
-        <h1>Create, Join, or View a Lobby</h1>
-        
-        <!-- Form to Create a Lobby -->
-        <button onclick="createLobby()">Create Lobby</button>
-        <div id="lobby-info"></div>
-        
-        <h2>Active Lobbies</h2>
-        <ul id="lobby-list"></ul>
-        
-        <!-- Join Lobby Section -->
-        <h2>Join a Lobby</h2>
-        <input type="text" id="username" placeholder="Your name" />
-        <input type="text" id="lobby-id" placeholder="Lobby ID" />
-        <button onclick="joinLobby()">Join Lobby</button>
-        
-        <button onclick="viewLobby()">View Lobby</button>
-        
-        <div id="lobby-messages"></div>
-        <h3>Players in Lobby:</h3>
-        <ul id="player-list"></ul>
-        
-        <script>
-            const socket = io();
+    <!-- Container to hold both spans -->
+    <div class="container">
+        <span class="stage">
+            <h1>Create, Join, or View a Lobby</h1>
+            <button onclick="createLobby()">Create Lobby</button>
+            <div id="lobby-info"></div>
+            <h2>Active Lobbies</h2>
+            <ul id="lobby-list"></ul>
+            <h2>Join a Lobby</h2>
+            <input type="text" id="username" placeholder="Your name" />
+            <input type="text" id="lobby-id" placeholder="Lobby ID" />
+            <button onclick="joinLobby()">Join Lobby</button>
+            <button onclick="viewLobby()">View Lobby</button>
+            <div id="lobby-messages"></div>
+            <h3>Players in Lobby:</h3>
+            <ul id="player-list"></ul>
+        </span>
 
-            function createLobby() {
-                fetch('/api/create-lobby', { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                        const lobbyInfo = document.getElementById('lobby-info');
-                        lobbyInfo.innerHTML = `Lobby created! URL: ${data.lobby_url}<br>Lobby ID: ${data.lobby_id}`;
-                        loadLobbies();  // Refresh the list of active lobbies
-                    })
-                    .catch(error => alert("Failed to create lobby. Please try again."));
-            }
+        <!-- Game Setup Section - Initially Hidden -->
+        <span class="game-setting" id="game-setup-section" style="display: none;">
+            <div id="game-setup">
+                <h3>Set up a Game</h3>
+                <input type="text" id="game-type" placeholder="Enter game type (e.g., drawing)">
+                <button onclick="setGameType()">Set Game Type</button>
+                <h3>Game Settings</h3>
+                <textarea id="game-settings" placeholder="Enter settings as JSON"></textarea>
+                <button onclick="updateSettings()">Update Settings</button>
+                <h3>Start Game</h3>
+                <button onclick="startGame()">Start Game</button>
+            </div>
+        </span>
+    </div>
 
-            function loadLobbies() {
-                fetch('/api/active-lobbies')
-                    .then(response => response.json())
-                    .then(data => {
-                        const lobbyList = document.getElementById('lobby-list');
-                        lobbyList.innerHTML = '';
-                        data.forEach(lobbyId => {
-                            const li = document.createElement('li');
-                            
-                            // Create a clickable link for each lobby
-                            const link = document.createElement('a');
-                            link.href = '#';
-                            link.textContent = `${lobbyId}`;
-                            link.onclick = () => {
-                                document.getElementById('lobby-id').value = lobbyId;
-                                viewLobby();
-                            };
-                            
-                            li.appendChild(link);
-                            lobbyList.appendChild(li);
-                        });
-                    })
-                    .catch(error => alert("Failed to load active lobbies."));
-            }
-
-            function joinLobby() {
-                const lobbyId = document.getElementById('lobby-id').value.trim();
-                const username = document.getElementById('username').value.trim();
-                
-                if (lobbyId && username) {
-                    socket.emit('join_lobby', { lobby_id: lobbyId, username: username });
-                } else {
-                    alert("Please enter both a username and lobby ID.");
-                }
-            }
-
-            function viewLobby() {
+    <script>
+        const socket = io();  // Initialize socket connection once at the top
+    
+        function createLobby() {
+            fetch('/api/create-lobby', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    const lobbyInfo = document.getElementById('lobby-info');
+                    lobbyInfo.innerHTML = `Lobby created! URL: ${data.lobby_url}<br>Lobby ID: ${data.lobby_id}`;
+                    loadLobbies();  // Refresh the list of active lobbies
+                })
+                .catch(error => alert("Failed to create lobby. Please try again."));
+        }
+    
+        function loadLobbies() {
+            fetch('/api/active-lobbies')
+                .then(response => response.json())
+                .then(data => {
+                    const lobbyList = document.getElementById('lobby-list');
+                    lobbyList.innerHTML = '';
+                    data.forEach(lobbyId => {
+                        const li = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.href = '#';
+                        link.textContent = `${lobbyId}`;
+                        link.onclick = () => {
+                            document.getElementById('lobby-id').value = lobbyId;
+                            viewLobby();
+                        };
+                        li.appendChild(link);
+                        lobbyList.appendChild(li);
+                    });
+                })
+                .catch(error => alert("Failed to load active lobbies."));
+        }
+    
+        function joinLobby() {
             const lobbyId = document.getElementById('lobby-id').value.trim();
-                if (lobbyId) {
-                    fetch(`/api/view-lobby/${lobbyId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error("Lobby not found or server error.");
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const playerList = document.getElementById('player-list');
-                            playerList.innerHTML = '';  // Clear the current list
-                            
-                            if (data.error) {
-                                alert(data.error);
-                            } else {
-                                data.players.forEach(player => {
-                                    const playerItem = document.createElement('li');
-                                    playerItem.textContent = player;
-                                    playerList.appendChild(playerItem);
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error viewing lobby:", error);
-                            alert("Failed to view lobby. Please try again.");
-                        });
-                } else {
-                    alert("Please enter a lobby ID to view.");
-                }
+            const username = document.getElementById('username').value.trim();
+            
+            if (lobbyId && username) {
+                socket.emit('join_lobby', { lobby_id: lobbyId, username: username });
+            } else {
+                alert("Please enter both a username and lobby ID.");
             }
-
-
-            socket.on('user_joined', data => {
-                const messages = document.getElementById('lobby-messages');
-                const message = document.createElement('p');
-                message.textContent = `${data.username} has joined the lobby.`;
-                messages.appendChild(message);
-
-                // Update the player list
-                const playerList = document.getElementById('player-list');
-                playerList.innerHTML = '';  // Clear current list
-                data.players.forEach(player => {
-                    const playerItem = document.createElement('li');
-                    playerItem.textContent = player;
-                    playerList.appendChild(playerItem);
-                });
+        }
+    
+        function viewLobby() {
+            const lobbyId = document.getElementById('lobby-id').value.trim();
+            if (lobbyId) {
+                fetch(`/api/view-lobby/${lobbyId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Lobby not found or server error.");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const playerList = document.getElementById('player-list');
+                        playerList.innerHTML = '';  // Clear the current list
+                        
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            data.players.forEach(player => {
+                                const playerItem = document.createElement('li');
+                                playerItem.textContent = player;
+                                playerList.appendChild(playerItem);
+                            });
+                            document.getElementById('game-setup-section').style.display = 'block';  // Show game setup
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error viewing lobby:", error);
+                        alert("Failed to view lobby. Please try again.");
+                    });
+            } else {
+                alert("Please enter a lobby ID to view.");
+            }
+        }
+    
+        socket.on('user_joined', data => {
+            const messages = document.getElementById('lobby-messages');
+            const message = document.createElement('p');
+            message.textContent = `${data.username} has joined the lobby.`;
+            messages.appendChild(message);
+    
+            // Update the player list
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = '';  // Clear current list
+            data.players.forEach(player => {
+                const playerItem = document.createElement('li');
+                playerItem.textContent = player;
+                playerList.appendChild(playerItem);
             });
-
-            socket.on('error', data => {
-                alert(data.message);
-            });
-
-            // Load active lobbies when the page is first loaded
-            loadLobbies();
-        </script>
-    </span>
+        });
+    
+        socket.on('error', data => {
+            alert(data.message);
+        });
+    
+        function setGameType() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            const gameType = document.getElementById('game-type').value;
+            socket.emit('set_game', { lobby_id: lobbyId, game_type: gameType });
+        }
+    
+        function updateSettings() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            const settings = JSON.parse(document.getElementById('game-settings').value);
+            socket.emit('update_settings', { lobby_id: lobbyId, settings: settings });
+        }
+    
+        function startGame() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            socket.emit('start_game', { lobby_id: lobbyId });
+        }
+    
+        socket.on('game_type_set', data => {
+            alert(`Game type set to ${data.game_type}`);
+        });
+    
+        socket.on('settings_updated', data => {
+            alert("Game settings updated");
+        });
+    
+        socket.on('game_started', data => {
+            alert("Game started!");
+        });
+    
+        // Load active lobbies when the page is first loaded
+        loadLobbies();
+    </script>
 </body>
 </html>
