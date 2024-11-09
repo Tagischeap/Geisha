@@ -39,7 +39,6 @@
             </div>
         </span>
     </div>
-
     <script>
         const socket = io();  // Initialize socket connection once at the top
     
@@ -49,7 +48,13 @@
                 .then(data => {
                     const lobbyInfo = document.getElementById('lobby-info');
                     lobbyInfo.innerHTML = `Lobby created! URL: ${data.lobby_url}<br>Lobby ID: ${data.lobby_id}`;
-                    loadLobbies();  // Refresh the list of active lobbies
+                    
+                    // Automatically set the lobby ID and view the lobby
+                    document.getElementById('lobby-id').value = data.lobby_id;
+                    viewLobby();
+                    
+                    // Refresh the list of active lobbies
+                    loadLobbies();
                 })
                 .catch(error => alert("Failed to create lobby. Please try again."));
         }
@@ -62,6 +67,8 @@
                     lobbyList.innerHTML = '';
                     data.forEach(lobbyId => {
                         const li = document.createElement('li');
+                        
+                        // Create a clickable link for each lobby
                         const link = document.createElement('a');
                         link.href = '#';
                         link.textContent = `${lobbyId}`;
@@ -69,6 +76,7 @@
                             document.getElementById('lobby-id').value = lobbyId;
                             viewLobby();
                         };
+                        
                         li.appendChild(link);
                         lobbyList.appendChild(li);
                     });
@@ -121,6 +129,26 @@
             }
         }
     
+        // Game setup functions and socket event handlers
+    
+        function setGameType() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            const gameType = document.getElementById('game-type').value;
+            socket.emit('set_game', { lobby_id: lobbyId, game_type: gameType });
+        }
+    
+        function updateSettings() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            const settings = JSON.parse(document.getElementById('game-settings').value);
+            socket.emit('update_settings', { lobby_id: lobbyId, settings: settings });
+        }
+        function startGame() {
+            const lobbyId = document.getElementById('lobby-id').value;
+            // Emit the start game event
+            socket.emit('start_game', { lobby_id: lobbyId });
+            // Redirect to the lobby page after starting the game
+            window.location.href = `/lobby/${lobbyId}`;
+        }
         socket.on('user_joined', data => {
             const messages = document.getElementById('lobby-messages');
             const message = document.createElement('p');
@@ -141,23 +169,6 @@
             alert(data.message);
         });
     
-        function setGameType() {
-            const lobbyId = document.getElementById('lobby-id').value;
-            const gameType = document.getElementById('game-type').value;
-            socket.emit('set_game', { lobby_id: lobbyId, game_type: gameType });
-        }
-    
-        function updateSettings() {
-            const lobbyId = document.getElementById('lobby-id').value;
-            const settings = JSON.parse(document.getElementById('game-settings').value);
-            socket.emit('update_settings', { lobby_id: lobbyId, settings: settings });
-        }
-    
-        function startGame() {
-            const lobbyId = document.getElementById('lobby-id').value;
-            socket.emit('start_game', { lobby_id: lobbyId });
-        }
-    
         socket.on('game_type_set', data => {
             alert(`Game type set to ${data.game_type}`);
         });
@@ -173,5 +184,6 @@
         // Load active lobbies when the page is first loaded
         loadLobbies();
     </script>
+    
 </body>
 </html>
