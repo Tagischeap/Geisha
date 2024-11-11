@@ -1,4 +1,4 @@
-# events/on_message_react.py
+# bot/events/on_message_react.py
 import discord
 import random
 import asyncio
@@ -13,9 +13,9 @@ async def react_to_message(client, message):
             return
 
         # Determine the current season and load words and emojis
-        season = get_current_season()
-        if not season:
-            return  # No seasonal event active
+        season, _ = get_current_season()  # Unpack the season name and ignore the icon path
+        if not season or season == "normal":
+            return  # No seasonal event active or it's the default icon period
 
         bank_of_words, emoji_list = load_word_bank_and_emojis(season)
 
