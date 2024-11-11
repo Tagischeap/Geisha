@@ -1,3 +1,5 @@
+# bot/core/command_handler.py
+
 import logging
 import discord
 from discord.ext import commands
@@ -22,8 +24,9 @@ async def handle_command(client, message: discord.Message, command_name: str, ar
                 await command['execute'](client, message, args)
             logger.info(f"Executed command '{command_name}' with args: {args}")
         except Exception as e:
-            logger.error(f"Error executing command '{command_name}': {e}")
+            logger.error(f"Error executing command '{command_name}': {e}", exc_info=True)
             await message.channel.send(f"An error occurred while executing `{command_name}`.")
+
             
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
