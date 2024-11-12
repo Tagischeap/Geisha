@@ -1,3 +1,4 @@
+# web/socket_handlers.py
 from flask_socketio import emit
 from app import socketio
 import lobby_manager

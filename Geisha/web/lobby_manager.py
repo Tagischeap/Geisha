@@ -1,3 +1,4 @@
+# web/lobby_manager.py
 import uuid
 import logging
 

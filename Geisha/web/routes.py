@@ -1,3 +1,4 @@
+# web/routes.py
 from flask import jsonify, request
 from app import app
 import lobby_manager
