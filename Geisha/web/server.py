@@ -1,3 +1,4 @@
+# web/server.py
 import sqlite3
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit, join_room

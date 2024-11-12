@@ -1,3 +1,4 @@
+# web/app.py
 from flask import Flask
 from flask_socketio import SocketIO
 from config import SECRET_KEY
