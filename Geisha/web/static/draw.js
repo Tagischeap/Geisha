@@ -1,3 +1,4 @@
+// web/static/draw.js
 const socket = io();
 const canvas = document.getElementById("drawingCanvas");
 const ctx = canvas.getContext("2d");
