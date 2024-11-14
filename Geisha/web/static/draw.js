@@ -32,14 +32,26 @@ canvas.addEventListener("mousemove", (event) => {
     ctx.stroke();
 });
 
-socket.on("draw_start", (data) => {
-    console.log("Received draw_start event:", data); // Debugging log
+// Helper functions to process historical events
+function startDrawing(pos) {
     ctx.beginPath();
-    ctx.moveTo(data.pos.x, data.pos.y);
+    ctx.moveTo(pos.x, pos.y);
+}
+
+function continueDrawing(pos) {
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+}
+
+// Updated drawing history listener
+socket.on('drawing_history', (data) => {
+    console.log("Received drawing history:", data.history); // Debugging log
+    data.history.forEach(event => {
+        if (event.type === 'draw_start') {
+            startDrawing(event.data.pos);
+        } else if (event.type === 'draw') {
+            continueDrawing(event.data.pos);
+        }
+    });
 });
 
-socket.on("draw", (data) => {
-    console.log("Received draw event:", data); // Debugging log
-    ctx.lineTo(data.pos.x, data.pos.y);
-    ctx.stroke();
-});
